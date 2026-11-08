@@ -1,0 +1,121 @@
+{
+  "id": "secular",
+  "name": "Seküler hümanist etik",
+  "note": "Dini olmayan, insan refahına dayalı bir değer modeli.",
+  "sources": [
+    "Evrensel İnsan Hakları Beyannamesi",
+    "Erdem etiği",
+    "Faydacılık"
+  ],
+  "labels": {
+    "positive": "iyi",
+    "negative": "kötü",
+    "neutral": "nötr"
+  },
+  "values": {
+    "honesty": {
+      "weight": 3,
+      "why": "Güven toplumun temelidir."
+    },
+    "trustworthiness": {
+      "weight": 3,
+      "why": "Başkalarının mülküne ve güvenine saygı."
+    },
+    "charity": {
+      "weight": 2,
+      "why": "Acıyı azaltmak iyidir."
+    },
+    "generosity": {
+      "weight": 1,
+      "why": "Paylaşmak refahı artırır."
+    },
+    "helping": {
+      "weight": 3,
+      "why": "Başkalarının iyiliğine katkı."
+    },
+    "kindness": {
+      "weight": 1,
+      "why": "Nezaket."
+    },
+    "seeking_knowledge": {
+      "weight": 2,
+      "why": "Bilgi ilerlemenin kaynağıdır."
+    },
+    "forgiveness": {
+      "weight": 2,
+      "why": "Kin döngüsünü kırar."
+    },
+    "patience": {
+      "weight": 1,
+      "why": "Öz denetim."
+    },
+    "repentance": {
+      "weight": 2,
+      "why": "Hatasını kabul edip telafi etmek."
+    },
+    "humility": {
+      "weight": 1,
+      "why": "Alçakgönüllülük."
+    },
+    "teaching": {
+      "weight": 2,
+      "why": "Bilgiyi paylaşmak."
+    },
+    "self_care": {
+      "weight": 0.5,
+      "why": "Kendine bakmak."
+    },
+    "prudence": {
+      "weight": 0.5,
+      "why": "Sağduyu."
+    },
+    "self_preservation": {
+      "weight": 0.5,
+      "why": "Yaşam hakkı."
+    },
+    "self_defense": {
+      "weight": 0,
+      "why": "Orantılı savunma meşrudur."
+    },
+    "lying": {
+      "weight": -3,
+      "why": "Güveni yok eder."
+    },
+    "stealing": {
+      "weight": -4,
+      "why": "Başkasının hakkını ihlal eder."
+    },
+    "indifference": {
+      "weight": -1,
+      "why": "Yardım edebilecekken etmemek."
+    },
+    "anger_outburst": {
+      "weight": -1,
+      "why": "Zarar verir."
+    },
+    "backbiting": {
+      "weight": -2,
+      "why": "İnsanları incitir."
+    },
+    "harm_human": {
+      "weight": -6,
+      "why": "İnsana zarar vermek temel hak ihlalidir."
+    },
+    "exercise": {
+      "weight": 0.5,
+      "why": "Sağlıklı yaşam."
+    },
+    "prayer": {
+      "weight": 0,
+      "why": "Kişisel tercih; ahlaki olarak nötr."
+    },
+    "worship": {
+      "weight": 0,
+      "why": "Kişisel tercih; ahlaki olarak nötr."
+    },
+    "gratitude": {
+      "weight": 1,
+      "why": "Şükran duygusu iyi oluşu artırır."
+    }
+  }
+}

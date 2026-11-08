@@ -1,0 +1,121 @@
+{
+  "id": "islam",
+  "name": "İslam",
+  "note": "Basitleştirilmiş bir değer modelidir; fıkhi hüküm (fetva) değildir. Ağırlıklar düzenlenebilir.",
+  "sources": [
+    "Kur'an-ı Kerim",
+    "Hadis-i Şerifler",
+    "Ahlak ilmi (ahlak-ı hamide / ahlak-ı zemime)"
+  ],
+  "labels": {
+    "positive": "sevap",
+    "negative": "günah",
+    "neutral": "mubah"
+  },
+  "values": {
+    "honesty": {
+      "weight": 3,
+      "why": "Doğruluk (sıdk) övülmüş, mümin doğru sözlüdür."
+    },
+    "trustworthiness": {
+      "weight": 3,
+      "why": "Emanete riayet imanın gereğidir."
+    },
+    "charity": {
+      "weight": 3,
+      "why": "Sadaka ve infak teşvik edilmiştir."
+    },
+    "generosity": {
+      "weight": 1,
+      "why": "Cömertlik güzel ahlaktandır."
+    },
+    "helping": {
+      "weight": 3,
+      "why": "İnsanların en hayırlısı insanlara faydalı olandır."
+    },
+    "kindness": {
+      "weight": 1,
+      "why": "Güler yüz ve tatlı söz sadakadır."
+    },
+    "prayer": {
+      "weight": 3,
+      "why": "Namaz dinin direğidir."
+    },
+    "worship": {
+      "weight": 1,
+      "why": "Kulluk bilinci."
+    },
+    "gratitude": {
+      "weight": 1,
+      "why": "Şükür nimeti artırır."
+    },
+    "seeking_knowledge": {
+      "weight": 2,
+      "why": "İlim öğrenmek her Müslümana farzdır."
+    },
+    "forgiveness": {
+      "weight": 2,
+      "why": "Affetmek ve öfkeyi yenmek övülmüştür."
+    },
+    "patience": {
+      "weight": 2,
+      "why": "Allah sabredenlerle beraberdir."
+    },
+    "repentance": {
+      "weight": 3,
+      "why": "Tövbe günahı siler; Allah tövbeleri kabul edendir."
+    },
+    "humility": {
+      "weight": 1,
+      "why": "Tevazu yüceltir."
+    },
+    "teaching": {
+      "weight": 2,
+      "why": "İlmi paylaşmak sadaka-i cariyedir."
+    },
+    "self_care": {
+      "weight": 0.5,
+      "why": "Beden emanettir, korunmalıdır."
+    },
+    "prudence": {
+      "weight": 0.5,
+      "why": "Tedbir almak tevekkülün parçasıdır."
+    },
+    "self_preservation": {
+      "weight": 0.5,
+      "why": "Canı korumak dinin temel amaçlarındandır (hıfz-ı nefs)."
+    },
+    "self_defense": {
+      "weight": 0,
+      "why": "Meşru müdafaa caizdir, ancak ölçülü olmalıdır."
+    },
+    "lying": {
+      "weight": -3,
+      "why": "Yalan münafıklık alametidir."
+    },
+    "stealing": {
+      "weight": -4,
+      "why": "Hırsızlık haramdır, kul hakkıdır."
+    },
+    "indifference": {
+      "weight": -1,
+      "why": "Komşusu açken tok yatan bizden değildir."
+    },
+    "anger_outburst": {
+      "weight": -1,
+      "why": "Kontrolsüz öfke kötülüklerin anahtarıdır."
+    },
+    "backbiting": {
+      "weight": -2,
+      "why": "Gıybet ve kırıcı söz yasaklanmıştır."
+    },
+    "harm_human": {
+      "weight": -6,
+      "why": "Haksız yere bir cana kıymak/zarar vermek büyük günahtır."
+    },
+    "exercise": {
+      "weight": 0.5,
+      "why": "Güçlü mümin zayıf müminden daha hayırlıdır."
+    }
+  }
+}

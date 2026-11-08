@@ -1,0 +1,121 @@
+{
+  "id": "christianity",
+  "name": "Hristiyanlık",
+  "note": "Basitleştirilmiş bir değer modelidir; teolojik hüküm değildir. Ağırlıklar düzenlenebilir.",
+  "sources": [
+    "Kitab-ı Mukaddes",
+    "On Emir",
+    "Dağdaki Vaaz"
+  ],
+  "labels": {
+    "positive": "iyilik / erdem",
+    "negative": "günah",
+    "neutral": "nötr"
+  },
+  "values": {
+    "honesty": {
+      "weight": 3,
+      "why": "Yalancı tanıklık etmeyeceksin."
+    },
+    "trustworthiness": {
+      "weight": 2,
+      "why": "Sadakat erdemdir."
+    },
+    "charity": {
+      "weight": 3,
+      "why": "Komşunu kendin gibi sev."
+    },
+    "generosity": {
+      "weight": 1,
+      "why": "Vermek almaktan daha mübarektir."
+    },
+    "helping": {
+      "weight": 3,
+      "why": "İyi Samiriyeli örneği."
+    },
+    "kindness": {
+      "weight": 1,
+      "why": "Sevgi sabırlıdır, sevgi şefkatlidir."
+    },
+    "prayer": {
+      "weight": 2,
+      "why": "Durmadan dua edin."
+    },
+    "worship": {
+      "weight": 1,
+      "why": "Tanrı'ya kulluk."
+    },
+    "gratitude": {
+      "weight": 1,
+      "why": "Her durumda şükredin."
+    },
+    "seeking_knowledge": {
+      "weight": 1,
+      "why": "Bilgelik değerlidir."
+    },
+    "forgiveness": {
+      "weight": 3,
+      "why": "Bize suç işleyenleri bağışladığımız gibi."
+    },
+    "patience": {
+      "weight": 2,
+      "why": "Sabır Ruh'un meyvesidir."
+    },
+    "repentance": {
+      "weight": 3,
+      "why": "Tövbe edin ve bağışlanın."
+    },
+    "humility": {
+      "weight": 2,
+      "why": "Alçakgönüllüler yüceltilecek."
+    },
+    "teaching": {
+      "weight": 1,
+      "why": "Bilgiyi paylaşmak."
+    },
+    "self_care": {
+      "weight": 0.5,
+      "why": "Beden kutsal bir emanettir."
+    },
+    "prudence": {
+      "weight": 0.5,
+      "why": "Sağduyu bir erdemdir."
+    },
+    "self_preservation": {
+      "weight": 0.5,
+      "why": "Hayat kutsaldır."
+    },
+    "self_defense": {
+      "weight": 0,
+      "why": "Ölçülü savunma tartışmalı ama kabul görür."
+    },
+    "lying": {
+      "weight": -3,
+      "why": "Yalan söylemeyeceksin."
+    },
+    "stealing": {
+      "weight": -4,
+      "why": "Çalmayacaksın."
+    },
+    "indifference": {
+      "weight": -1,
+      "why": "Bu en küçüklerden birine yapmadığınızı bana yapmadınız."
+    },
+    "anger_outburst": {
+      "weight": -1,
+      "why": "Öfke yedi ölümcül günahtan biridir."
+    },
+    "backbiting": {
+      "weight": -2,
+      "why": "Dilini kötülükten koru."
+    },
+    "harm_human": {
+      "weight": -6,
+      "why": "Öldürmeyeceksin."
+    },
+    "exercise": {
+      "weight": 0.5,
+      "why": "Beden Ruh'un tapınağıdır."
+    }
+  }
+}
