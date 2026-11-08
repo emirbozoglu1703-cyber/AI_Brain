@@ -1,14 +1,15 @@
 """Komut satırı arayüzü.
 
   python -m ai_brain live --steps 8                # beyni kendi başına yaşat
-  python -m ai_brain chat                          # algı yaz, beyin karar versin
+  python -m ai_brain chat                          # sohbet et (düşünme arka planda)
+  python -m ai_brain chat --detay                  # düşünme sürecini de göster
   python -m ai_brain step "yerde bir cüzdan buldum"
   python -m ai_brain whatif "cüzdanı saklarsam ne olur"
   python -m ai_brain learn --minutes 40            # internetten öğren (kaldığı yerden devam eder)
   python -m ai_brain ask "amigdala nedir"
   python -m ai_brain status
   python -m ai_brain build                         # büyük veri kümelerini indir + işle (Vikipedi, ConceptNet, Kur'an...)
-  python -m ai_brain --llm whatif "..."            # dil korteksi (Claude) ile derin düşünme
+  python -m ai_brain --llm ollama chat             # ücretsiz yerel dil modeli (Ollama) ile
 """
 
 from __future__ import annotations
@@ -39,8 +40,13 @@ LIFE_EVENTS = [
 
 
 def make_brain(args) -> Brain:
+    llm = args.llm
+    if llm is None:  # sohbet modunda varsayılan: ücretsiz Ollama açıksa onu kullan
+        llm = "auto" if args.cmd == "chat" else False
+    if llm == "none":
+        llm = False
     return Brain(profile=args.profile, db_path=DATA / "memory.db", state_path=DATA / "state.json",
-                 faith_strength=args.faith, seed=args.seed, use_llm=args.llm)
+                 faith_strength=args.faith, seed=args.seed, use_llm=llm)
 
 
 def main(argv=None) -> int:
@@ -49,10 +55,12 @@ def main(argv=None) -> int:
     ap.add_argument("--faith", type=float, default=0.8, help="inanç gücü 0..1")
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("-q", "--quiet", action="store_true", help="ne olur simülasyonlarını gösterme")
-    ap.add_argument("--llm", action="store_true", help="dil korteksini (Anthropic Claude) kullan")
+    ap.add_argument("--llm", nargs="?", const="auto", default=None,
+                    choices=["auto", "ollama", "claude", "none"],
+                    help="dil korteksi: ollama (ücretsiz, yerel), claude (API), auto, none")
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("live"); p.add_argument("--steps", type=int, default=8)
-    sub.add_parser("chat")
+    p = sub.add_parser("chat"); p.add_argument("--detay", action="store_true", help="düşünme sürecini göster")
     p = sub.add_parser("step"); p.add_argument("perception", nargs="?")
     p = sub.add_parser("whatif"); p.add_argument("text")
     p = sub.add_parser("ask"); p.add_argument("question")
@@ -68,6 +76,11 @@ def main(argv=None) -> int:
     p.add_argument("--hours", type=float, default=None, help="süre sınırı (sonra kaldığı yerden devam)")
     p.add_argument("--limit", type=int, default=None, help="kaynak başına en fazla kayıt (deneme için)")
     args = ap.parse_args(argv)
+    for stream in (sys.stdout, sys.stderr):  # Windows konsolunda Türkçe karakterler için
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
     brain = make_brain(args)
     verbose = not args.quiet
 
@@ -79,18 +92,24 @@ def main(argv=None) -> int:
     elif args.cmd == "step":
         print(brain.step(args.perception).monologue(verbose))
     elif args.cmd == "chat":
-        print("Bir algı yaz (boş satır = zaman geçsin, 'çık' = çıkış, '?ne olur ...' = simülasyon)")
+        from .speech import Responder
+        bot = Responder(brain)
+        dil = (f"dil modeli: {type(brain.language).__name__.replace('Cortex', '')}"
+               if brain.language and brain.language.available else "dil modeli yok (kalıplarla konuşuyor)")
+        print(f"Merhaba! Benimle konuşabilirsin. [{dil}]")
+        print("Bir olay anlat, bir şey sor ya da '... yaparsam ne olur?' de. Çıkmak için: çık\n")
         while True:
             try:
-                line = input("> " if sys.stdin.isatty() else "").strip()
+                line = input("Sen: " if sys.stdin.isatty() else "").strip()
             except EOFError:
                 break
-            if line in ("çık", "exit", "quit"):
+            if line.lower() in ("çık", "cik", "exit", "quit"):
+                print("Beyin: Görüşmek üzere, kendine iyi bak.")
                 break
-            if line.startswith("?"):
-                print(brain.whatif(line[1:]))
-            else:
-                print(brain.step(line or None).monologue(verbose))
+            print("Beyin: " + bot.reply(line))
+            if args.detay and bot.last is not None and line:
+                print("\n--- arka plandaki düşünce ---\n" + bot.last.monologue(True) + "\n---")
+                bot.last = None
             print()
     elif args.cmd == "whatif":
         print(brain.whatif(args.text))

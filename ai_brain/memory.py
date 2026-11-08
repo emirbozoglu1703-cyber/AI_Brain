@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS commonsense(
     id INTEGER PRIMARY KEY, rel TEXT, start TEXT, end TEXT, start_lang TEXT, end_lang TEXT,
     weight REAL, surface TEXT);
 CREATE INDEX IF NOT EXISTS cs_start ON commonsense(start, rel);
+CREATE INDEX IF NOT EXISTS facts_title ON facts(title);
 CREATE TABLE IF NOT EXISTS scripture(
     id INTEGER PRIMARY KEY, tradition TEXT, edition TEXT, ref TEXT, text TEXT, lang TEXT);
 CREATE VIRTUAL TABLE IF NOT EXISTS scripture_fts USING fts5(text, content='scripture', content_rowid='id');
@@ -47,14 +48,24 @@ _WORD = re.compile(r"[\wçğıöşüÇĞİÖŞÜ]{2,}", re.UNICODE)
 STOP = {"ve", "ile", "bir", "bu", "şu", "ne", "da", "de", "mi", "mı", "mu", "mü", "için", "olur",
         "nedir", "nasıl", "neden", "the", "a", "an", "of", "is", "what", "how", "why", "and", "or",
         "to", "in", "if", "ben", "ise", "yaparsam", "eğer", "kendine", "kendi", "yap", "et", "ver", "olan",
-        "olarak", "gibi", "daha", "çok", "sonra", "önce", "kadar", "ama", "fakat", "ki", "yaparsak", "olursa"}
+        "olarak", "gibi", "daha", "çok", "sonra", "önce", "kadar", "ama", "fakat", "ki", "yaparsak", "olursa",
+        "zaman", "kimdir", "nerede", "nereden", "hangi", "kaç", "midir", "mıdır", "mudur", "müdür", "niçin",
+        "niye", "neler", "nelerdir", "anlat", "söyle", "bana", "hakkında", "bilgi", "ver", "who", "when",
+        "where", "which", "does", "are", "was", "tell", "about", "me"}
 
 
-def fts_query(text: str) -> str:
-    words = [w for w in _WORD.findall(text.lower()) if w not in STOP]
+def normalize(text: str) -> str:
+    """Türkçe 'İ' Python'da 'i̇' (noktalı) olur; arama dizini ile uyumlu olması için düz 'i' yap."""
+    return text.replace("İ", "i").lower().replace("i̇", "i")
+
+
+def fts_query(text: str, mode: str = "OR", prefix: int | None = None) -> str:
+    words = [w for w in _WORD.findall(normalize(text)) if w not in STOP]
+    if prefix:
+        return f" {mode} ".join(f'"{w[:prefix]}"*' for w in words)
     # Türkçe ekleri tolere etmek için kelime köküne yakın önek araması
     terms = [f'"{w[:max(4, len(w) - 3)]}"*' if len(w) > 5 else f'"{w}"' for w in words]
-    return " OR ".join(terms)
+    return f" {mode} ".join(terms)
 
 
 def expand_concepts(concepts: list[str]) -> list[str]:
@@ -152,14 +163,54 @@ class Hippocampus:
                 for r in self.db.execute(sql, params).fetchall()]
 
     def recall(self, query: str, limit: int = 5) -> list[dict]:
-        q = fts_query(query)
+        """Önce tüm kelimeleri içeren kayıtları (hızlı, isabetli), yoksa herhangi birini içerenleri arar."""
+        rows: list = []
+        for mode in ("AND", "OR"):
+            q = fts_query(query, mode)
+            if not q:
+                return []
+            rows = self.db.execute(
+                "SELECT f.title, snippet(facts_fts, 1, '«', '»', ' … ', 40), f.url, f.lang, f.text, f.id "
+                "FROM facts_fts JOIN facts f ON f.id = facts_fts.rowid WHERE facts_fts MATCH ? "
+                "ORDER BY bm25(facts_fts, 5.0, 1.0) LIMIT ?", (q, limit)).fetchall()
+            if rows or " " not in q.strip():
+                break
+        return [{"title": r[0], "snippet": r[1], "url": r[2], "lang": r[3], "text": r[4], "id": r[5]}
+                for r in rows]
+
+    def find_titles(self, question: str, limit: int = 5) -> list[str]:
+        """Soru kelimelerinin köklerini (ilk 4 harf) başlıkta arar: 'İstanbul ne zaman fethedildi' →
+        'İstanbul'un Fethi'. Türkçe eklerine karşı dayanıklı, kaba bir kök eşleştirme."""
+        q = fts_query(question, "AND", prefix=4)
         if not q:
             return []
         rows = self.db.execute(
-            "SELECT f.title, snippet(facts_fts, 1, '«', '»', ' … ', 40), f.url, f.lang "
-            "FROM facts_fts JOIN facts f ON f.id = facts_fts.rowid WHERE facts_fts MATCH ? "
-            "ORDER BY bm25(facts_fts, 5.0, 1.0) LIMIT ?", (q, limit)).fetchall()
-        return [{"title": r[0], "snippet": r[1], "url": r[2], "lang": r[3]} for r in rows]
+            "SELECT DISTINCT f.title FROM facts_fts JOIN facts f ON f.id = facts_fts.rowid "
+            "WHERE facts_fts MATCH ? LIMIT 3000", (f"title : ({q})",)).fetchall()
+        titles = [r[0] for r in rows]
+        sizes = self.article_sizes(titles)
+        return sorted(titles, key=lambda t: (-sizes.get(t, 0), len(t)))[:limit]
+
+    def article_sizes(self, titles: list[str]) -> dict[str, int]:
+        """Makale başına parça sayısı (makalenin büyüklüğü ≈ önemi)."""
+        out: dict[str, int] = {}
+        for i in range(0, len(titles), 500):
+            part = titles[i:i + 500]
+            out.update(self.db.execute(
+                "SELECT title, COUNT(*) FROM facts WHERE title IN (%s) GROUP BY title" % ",".join("?" * len(part)),
+                part).fetchall())
+        return out
+
+    def title_exists(self, title: str) -> bool:
+        return self.db.execute("SELECT 1 FROM facts WHERE title=? LIMIT 1", (title,)).fetchone() is not None
+
+    def article_intro(self, title: str, chunks: int = 1) -> str:
+        """Bir makalenin ilk paragraf(lar)ı — tanım soruları için en iyi cevap."""
+        lang = self.db.execute("SELECT lang FROM facts WHERE title=? ORDER BY (lang='tr') DESC LIMIT 1",
+                               (title,)).fetchone()
+        rows = self.db.execute("SELECT text FROM facts WHERE title=? AND lang=? ORDER BY id LIMIT ?",
+                               (title, lang[0] if lang else "tr", chunks)).fetchall()
+        return "\n".join(r[0] for r in rows)
 
     def recall_consequences(self, query: str, limit: int = 5, cause_only: bool = True) -> list[dict]:
         """Neden-sonuç cümleleri. cause_only: yalnızca 'neden' kısmı sorguyla eşleşenler (daha isabetli)."""

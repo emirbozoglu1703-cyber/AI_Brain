@@ -76,7 +76,7 @@ def download(url: str, dest: Path, log: Callable[[str], None]) -> Path:
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(dest.suffix + ".part")
-    log(f"  ↓ indiriliyor: {url}")
+    log(f"  indiriliyor: {url}")
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as f:
         while chunk := r.read(1 << 20):
@@ -266,7 +266,7 @@ def ingest_gutenberg(memory: Hippocampus, raw: Path, log: Callable[[str], None],
                 memory.add_scripture("christianity", "kjv", f"§{i + 1}", chunk, "en")
         prog.set("gutenberg", key, len(chunks), finished=True)
         memory.commit()
-        log(f"  ✓ Gutenberg: {title} ({len(chunks)} parça)")
+        log(f"  + Gutenberg: {title} ({len(chunks)} parça)")
         n += 1
     return n
 
@@ -282,7 +282,7 @@ def build(memory: Hippocampus, raw_dir: str | Path = "data/raw", sources=SOURCES
         if deadline and time.time() > deadline:
             log("Süre doldu; bir sonraki çalıştırmada kaldığı yerden devam edecek.")
             break
-        log(f"▶ {src}")
+        log(f"> {src}")
         t0 = time.time()
         if src == "gutenberg":
             report[src] = ingest_gutenberg(memory, raw, log, deadline)
@@ -300,7 +300,7 @@ def build(memory: Hippocampus, raw_dir: str | Path = "data/raw", sources=SOURCES
                     edition = name.split("-", 1)[1].rsplit(".", 1)[0]
                     count += ingest_quran(memory, path, edition, "tr" if edition.startswith("tr") else "en", log)
             report[src] = count
-        log(f"  ✓ {src}: {report[src]:,} kayıt, {time.time() - t0:.0f} sn")
+        log(f"  + {src}: {report[src]:,} kayıt, {time.time() - t0:.0f} sn")
     memory.optimize()
     return report
 

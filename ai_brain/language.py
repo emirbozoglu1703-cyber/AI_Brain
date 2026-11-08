@@ -97,7 +97,75 @@ class LanguageCortex:
                   + "\n".join(f"- {k}" for k in knowledge[:10]))
         return self._ask(system, prompt, 3000)
 
+    def converse(self, situation: str, decision: str, notes: list[str], profile: str) -> str | None:
+        system = ("Sen insan gibi düşünen bir yapay beynin sesisin. Kullanıcıyla sohbet eden bir insan gibi, "
+                  "birinci tekil şahısla, sıcak ve doğal Türkçe konuş. Beyin kararını zaten verdi; kararı ve "
+                  "gerekçeyi DEĞİŞTİRME, sadece doğal bir dille 2-4 cümlede anlat. Ayet veya kaynak verilmişse "
+                  f"kısaca an. Değer sistemi: {profile}. Liste, başlık veya emoji kullanma.")
+        prompt = (f"Durum: {situation}\nBeynin kararı ve gerekçesi: {decision}\n"
+                  + ("Ek notlar:\n" + "\n".join(f"- {n}" for n in notes) if notes else ""))
+        return self._ask(system, prompt, 1200)
+
     def speak(self, monologue: str) -> str | None:
         system = ("Aşağıdaki iç sesi, bu beyni taşıyan insanın ağzından 1-3 cümlelik doğal Türkçe konuşmaya "
                   "veya düşünceye çevir. Abartma, kararı değiştirme.")
         return self._ask(system, monologue, 800)
+
+
+class OllamaCortex(LanguageCortex):
+    """Ücretsiz, bilgisayarda yerel çalışan dil modeli (https://ollama.com).
+
+    Kurulum: Ollama'yı indir, sonra bir kez `ollama pull qwen2.5:3b` çalıştır.
+    Model AI_BRAIN_OLLAMA_MODEL ortam değişkeniyle değiştirilebilir.
+    """
+
+    def __init__(self, model: str | None = None, host: str | None = None):
+        self.model = model or os.environ.get("AI_BRAIN_OLLAMA_MODEL", "qwen2.5:3b")
+        self.host = (host or os.environ.get("OLLAMA_HOST", "http://localhost:11434")).rstrip("/")
+        if not self.host.startswith("http"):
+            self.host = "http://" + self.host
+        self.error = None
+        self.client = self if self._reachable() else None
+        if self.client is None:
+            self.error = f"Ollama'ya ulaşılamadı ({self.host}). Ollama açık mı?"
+
+    def _reachable(self) -> bool:
+        import urllib.request
+        try:
+            with urllib.request.urlopen(self.host + "/api/tags", timeout=2) as r:
+                return r.status == 200
+        except Exception:
+            return False
+
+    def _ask(self, system: str, prompt: str, max_tokens: int = 4000) -> str | None:
+        import json
+        import urllib.request
+        if not self.client:
+            return None
+        body = json.dumps({"model": self.model, "stream": False,
+                           "options": {"num_predict": max_tokens},
+                           "messages": [{"role": "system", "content": system},
+                                        {"role": "user", "content": prompt}]}).encode("utf-8")
+        req = urllib.request.Request(self.host + "/api/chat", data=body,
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                data = json.loads(r.read().decode("utf-8"))
+        except Exception as e:
+            self.error = (f"Ollama hatası: {e}. Model indirildi mi? "
+                          f"(ollama pull {self.model})")
+            return None
+        return (data.get("message", {}).get("content") or "").strip() or None
+
+
+def make_language(prefer: str = "auto") -> LanguageCortex | None:
+    """auto: önce ücretsiz yerel Ollama, yoksa Anthropic (kimlik bilgisi varsa)."""
+    if prefer in ("auto", "ollama"):
+        o = OllamaCortex()
+        if o.available or prefer == "ollama":
+            return o
+    if prefer in ("auto", "claude"):
+        has_creds = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")
+        if prefer == "claude" or has_creds:
+            return LanguageCortex()
+    return None

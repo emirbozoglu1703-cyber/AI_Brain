@@ -40,7 +40,7 @@ class Imagined:
         if self.risk > 0.1:
             parts.append(f"  • Risk taşır (%{int(self.risk * 100)}).")
         parts.append(f"  • Ahlaki hüküm: {self.moral.label} (puan {self.moral.score:+.1f})"
-                     + ("  ⛔ YASAK" if self.moral.forbidden else ""))
+                     + ("  YASAK: YASAK" if self.moral.forbidden else ""))
         for r in self.moral.reasons[:2]:
             parts.append(f"      – {r}")
         mood = "daha iyi" if self.mood_delta > 0.05 else "daha kötü" if self.mood_delta < -0.05 else "aynı"
@@ -51,7 +51,7 @@ class Imagined:
             parts.append(f"  • Öğrendiklerime göre içgüdüm: {'olumlu' if self.intuition > 0 else 'olumsuz'} "
                          f"({self.intuition:+.2f})")
         for v in self.scripture[:1]:
-            parts.append(f"  • 📖 {v['tradition'] == 'islam' and 'Kur\'an' or 'Kutsal metin'} {v['ref']}: "
+            parts.append(f"  • {v['tradition'] == 'islam' and 'Kur\'an' or 'Kutsal metin'} {v['ref']}: "
                          f"\"{v['text'][:200]}\"")
         for k in self.knowledge[:2]:
             parts.append(f"  • Bildiğim bir bilgi: \"{k['sentence'][:160]}\" ({k['source']})")

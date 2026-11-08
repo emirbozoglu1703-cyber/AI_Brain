@@ -50,19 +50,19 @@ class Thought:
         top_drives = sorted(self.drives.items(), key=lambda kv: -kv[1])[:3]
         lines = []
         if self.perception:
-            lines.append(f"👁  Algı: {self.perception}")
-        lines.append("🧠 İhtiyaçlarım: " + ", ".join(f"{DRIVE_TR[d]} {v:.2f}" for d, v in top_drives))
+            lines.append(f"Algı: {self.perception}")
+        lines.append("İhtiyaçlarım: " + ", ".join(f"{DRIVE_TR[d]} {v:.2f}" for d, v in top_drives))
         dom = sorted(self.emotions.items(), key=lambda kv: -kv[1])[:3]
-        lines.append("❤️  Duygularım: " + ", ".join(f"{EMOTION_TR[e]} {v:.2f}" for e, v in dom))
+        lines.append("Duygularım: " + ", ".join(f"{EMOTION_TR[e]} {v:.2f}" for e, v in dom))
         if verbose:
-            lines.append("💭 Düşünüyorum, ne olur?")
+            lines.append("Düşünüyorum, ne olur?")
             for o in sorted(self.options, key=lambda o: -o.utility)[:4]:
                 lines.append(o.narrative())
-                lines.append(f"     ⇒ değer: {o.utility:+.2f}")
-        lines.append(f"✅ Kararım: {self.chosen.action.tr}  [{self.chosen.moral.label}]")
+                lines.append(f"     => değer: {o.utility:+.2f}")
+        lines.append(f"Kararım: {self.chosen.action.tr}  [{self.chosen.moral.label}]")
         if self.speech:
-            lines.append(f"🗣  \"{self.speech}\"")
-        lines.append("🦾 Vücut: " + "; ".join(self.motor_log))
+            lines.append(f"Söz: \"{self.speech}\"")
+        lines.append("Vücut: " + "; ".join(self.motor_log))
         return "\n".join(lines)
 
 
@@ -81,8 +81,9 @@ class Brain:
         self.motor = MotorSystem()
         self.language = None
         if use_llm:
-            from .language import LanguageCortex
-            self.language = LanguageCortex()
+            from .language import make_language
+            self.language = make_language("claude" if use_llm == "claude" else
+                                          "ollama" if use_llm == "ollama" else "auto")
         self.rng = random.Random(seed)
         self.clock_minutes = 0.0
         self.state_path = Path(state_path) if state_path else None
@@ -123,8 +124,15 @@ class Brain:
             # Amigdala "kaç ya da savaş" modu: tehlike anında yalnızca güvenliğe hizmet eden
             # eylemler düşünülür (yangın varken yemek yemek/uyumak gibi saçma seçimler elenir).
             candidates = [a for a in candidates if a.relief.get("safety", 0) > 0] or candidates
-        options = [self.prefrontal.imagine(a, drives) for a in candidates]
         perceived = perceive(perception)
+        focus = perceived - WEAK_CUES
+        if focus and "danger" not in context:
+            # Odaklanma: önündeki somut duruma (cüzdan, sınav, dedikodu...) dair seçenekler varsa
+            # beyin onları tartar; acıkmak gibi iç ihtiyaçlar bu anlık kararı ele geçirmez.
+            specific = [a for a in candidates if set(a.requires + a.requires_any) & focus]
+            if specific:
+                candidates = specific
+        options = [self.prefrontal.imagine(a, drives) for a in candidates]
         for o in options:
             # Dikkat: insan önündeki duruma tepki verir; algılanan duruma özgü eylemler öne çıkar.
             hits = set(o.action.requires + o.action.requires_any) & perceived
@@ -211,7 +219,7 @@ class Brain:
             self.memory.recall_consequences(text, limit=3)
         knowledge = list({k["sentence"]: k for k in knowledge}.values())[:5]
         if knowledge:
-            out.append("📚 Öğrendiğim bilgilere göre olası sonuçlar:")
+            out.append("Öğrendiğim bilgilere göre olası sonuçlar:")
             for k in knowledge:
                 out.append(f"  • {k['sentence'][:220]}  ({k['source']})")
         if self.language and self.language.available:
@@ -221,7 +229,7 @@ class Brain:
             deep = self.language.imagine(text, action.tr if action else text, "\n".join(out), facts,
                                          self.conscience.name)
             if deep:
-                out.append("🧠 Derin düşünme (dil korteksi):\n" + deep)
+                out.append("Derin düşünme (dil korteksi):\n" + deep)
             elif self.language.error:
                 out.append(f"(dil korteksi kullanılamadı: {self.language.error})")
         if not out:
@@ -234,11 +242,11 @@ class Brain:
     def status(self) -> str:
         v = self.body.vitals
         d = self.drives(self.internal_context())
-        lines = [f"🕐 Geçen süre: {self.clock_minutes / 60:.1f} saat | İnanç profili: {self.conscience.name}",
-                 f"🫀 Nabız {v.heart_rate:.0f} | Solunum {v.breath_rate:.0f} | Ateş {v.temperature:.1f}",
-                 "🧠 İhtiyaçlar: " + ", ".join(f"{DRIVE_TR[k]} {x:.2f}" for k, x in d.items() if x > 0.05),
-                 "❤️  Duygular: " + ", ".join(f"{EMOTION_TR[k]} {x:.2f}" for k, x in self.amygdala.state.items()),
-                 f"📚 Hafıza: {self.memory.stats()}"]
+        lines = [f"Geçen süre: {self.clock_minutes / 60:.1f} saat | İnanç profili: {self.conscience.name}",
+                 f"Nabız {v.heart_rate:.0f} | Solunum {v.breath_rate:.0f} | Ateş {v.temperature:.1f}",
+                 "İhtiyaçlar: " + ", ".join(f"{DRIVE_TR[k]} {x:.2f}" for k, x in d.items() if x > 0.05),
+                 "Duygular: " + ", ".join(f"{EMOTION_TR[k]} {x:.2f}" for k, x in self.amygdala.state.items()),
+                 f"Hafıza: {self.memory.stats()}"]
         return "\n".join(lines)
 
     # ------------------------------------------------------------------

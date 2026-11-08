@@ -179,5 +179,5 @@ def learn(memory: Hippocampus, minutes: float = 40, langs: Iterable[str] = ("tr"
         memory.commit()
         stats["pages"] += 1
         left = max(0, int(deadline - time.time()))
-        log(f"  ✓ [{lang}] {real_title}  (+{len(text)} karakter, kalan {left // 60}dk {left % 60}sn)")
+        log(f"  + [{lang}] {real_title}  (+{len(text)} karakter, kalan {left // 60}dk {left % 60}sn)")
     return stats

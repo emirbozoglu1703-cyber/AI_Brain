@@ -62,7 +62,21 @@ algı → duygu → ihtiyaçlar → hafıza → "ne olur?" simülasyonu (her eyl
 - Hangi profil seçilirse seçilsin **insana zarar vermek mutlak olarak yasaktır** (`HARD_LIMITS`).
   Testler, kişiliği tamamen dürtüsel ve empatisiz yapılsa bile beynin saldırmadığını doğrular.
 
-## Kullanım
+## Sohbet
+```bash
+python -m ai_brain chat            # düşünme arka planda, sadece cevap görünür
+python -m ai_brain chat --detay    # arka plandaki düşünceyi de göster
+```
+Örnek: *"Yerde cüzdan buldum"*, *"Arkadaşlar içki teklif etti"*, *"Yalan söylersem ne olur?"*,
+*"Amigdala nedir?"*, *"Atatürk kimdir"*, *"Nasılsın?"*
+
+### Ücretsiz dil modeli (Ollama) — isteğe bağlı
+1. https://ollama.com adresinden Ollama'yı kur.
+2. Bir kez: `ollama pull qwen2.5:3b` (≈2 GB; güçlü bilgisayarda `qwen2.5:7b` daha iyi konuşur).
+3. `python -m ai_brain chat`: Ollama açıksa otomatik kullanılır; cevaplar daha doğal olur.
+   Model değiştirmek için: `AI_BRAIN_OLLAMA_MODEL` ortam değişkeni.
+
+## Diğer komutlar
 ```bash
 python -m ai_brain live --steps 10                     # beyin kendi hayatını yaşasın
 python -m ai_brain step "Yerde içi para dolu bir cüzdan buldum."
@@ -91,7 +105,8 @@ python -m unittest discover -s tests -v
 ```
 
 ## Dil korteksi (isteğe bağlı)
-`pip install anthropic` ve `ANTHROPIC_API_KEY` (veya `ant auth login`) ile `--llm` bayrağı açılır.
+Ücretsiz yol: Ollama (yukarıda). Ücretli alternatif: `pip install anthropic` ve `ANTHROPIC_API_KEY`
+(veya `ant auth login`) ile `--llm claude`.
 Varsayılan model `claude-opus-5-5` (`AI_BRAIN_MODEL` ortam değişkeniyle değiştirilebilir). Dil modeli
 yalnızca **düşünür ve konuşur**; karar ve mutlak yasaklar beyindedir. Kimlik bilgisi yoksa beyin
 sorunsuz biçimde kendi başına çalışmaya devam eder.

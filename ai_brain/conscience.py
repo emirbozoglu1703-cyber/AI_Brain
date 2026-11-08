@@ -60,7 +60,7 @@ class Conscience:
         for tag in action.tags:
             if tag in HARD_LIMITS:
                 forbidden = True
-                reasons.append(f"⛔ {HARD_LIMITS[tag]}")
+                reasons.append(f"YASAK: {HARD_LIMITS[tag]}")
             v = self.values.get(tag)
             if v is not None:
                 score += float(v["weight"])
