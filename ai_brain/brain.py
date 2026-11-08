@@ -27,6 +27,9 @@ from .limbic import DRIVE_TR, EMOTION_TR, Amygdala, Hypothalamus
 from .memory import Hippocampus
 from .perception import perceive
 
+# Ortamda biri/bir şey olduğunu söyleyen ama kendi başına "durum" olmayan zayıf ipuçları
+WEAK_CUES = {"friend_nearby", "family_nearby", "food_available", "new_info", "asked_question"}
+
 DEFAULT_PERSONALITY = {"empathy": 0.8, "conscientiousness": 0.8, "impulsivity": 0.2}
 
 
@@ -66,7 +69,7 @@ class Thought:
 class Brain:
     def __init__(self, profile: str = "islam", db_path: str | Path = ":memory:",
                  state_path: str | Path | None = None, personality: dict | None = None,
-                 faith_strength: float = 0.8, seed: int | None = None):
+                 faith_strength: float = 0.8, seed: int | None = None, use_llm: bool = False):
         self.personality = {**DEFAULT_PERSONALITY, **(personality or {})}
         self.body = Body()
         self.amygdala = Amygdala()
@@ -76,6 +79,10 @@ class Brain:
         self.prefrontal = PrefrontalCortex(self.conscience, self.memory, self.personality)
         self.basal = BasalGanglia(seed=seed)
         self.motor = MotorSystem()
+        self.language = None
+        if use_llm:
+            from .language import LanguageCortex
+            self.language = LanguageCortex()
         self.rng = random.Random(seed)
         self.clock_minutes = 0.0
         self.state_path = Path(state_path) if state_path else None
@@ -117,19 +124,32 @@ class Brain:
             # eylemler düşünülür (yangın varken yemek yemek/uyumak gibi saçma seçimler elenir).
             candidates = [a for a in candidates if a.relief.get("safety", 0) > 0] or candidates
         options = [self.prefrontal.imagine(a, drives) for a in candidates]
+        perceived = perceive(perception)
+        for o in options:
+            # Dikkat: insan önündeki duruma tepki verir; algılanan duruma özgü eylemler öne çıkar.
+            hits = set(o.action.requires + o.action.requires_any) & perceived
+            if hits:
+                o.utility += 0.8 if hits - WEAK_CUES else 0.25
         # Geçmişte benzer durumda iyi sonuç veren eylemleri hatırla
         for action_name, avg_reward in self.memory.similar_episodes(context):
             for o in options:
                 if o.action.name == action_name:
                     o.utility += 0.2 * avg_reward
         chosen = self.basal.select(options)
-        chosen.knowledge = self.memory.recall_consequences(chosen.action.tr, limit=2)
+        chosen.knowledge = self.knowledge_about(chosen.action)
+        chosen.commonsense = self.prefrontal.commonsense(chosen.action)[0]
+        chosen.scripture = self.conscience.scripture_for(chosen.action, self.memory)
+        for o in options:  # en iyi seçenekler için dayanakları da getir (açıklanabilirlik)
+            if o is not chosen and o.moral.score < -1.5 and not o.scripture:
+                o.scripture = self.conscience.scripture_for(o.action, self.memory)
 
         speech, memories = None, []
         if chosen.action.name == "answer_question" and perception:
             memories = self.memory.recall(perception, limit=3)
             speech = (memories[0]["snippet"] if memories
                       else "Bunu henüz bilmiyorum, öğrenmem gerekiyor.")
+            if self.language and self.language.available:
+                speech = self.language.answer(perception, memories, self.conscience.name) or speech
         else:
             speech = next((str(a) for r, c, a in chosen.action.motor if r == "mouth" and c == "speak"), None)
 
@@ -174,6 +194,11 @@ class Brain:
         self.basal.reinforce(a.name, reward)
         return round(reward, 3)
 
+    def knowledge_about(self, action: Action, limit: int = 2) -> list[dict]:
+        from .actions import ACTION_CONCEPTS
+        terms = " ".join(action.keywords + ACTION_CONCEPTS.get(action.name, ()))
+        return self.memory.recall_consequences(terms, limit=limit) if terms else []
+
     # ------------------------------------------------------------------
     def whatif(self, text: str) -> str:
         """'Bunu yaparsam ne olur?' — eylem simülasyonu + öğrenilmiş bilgi."""
@@ -181,12 +206,24 @@ class Brain:
         drives = self.drives(self.internal_context() | perceive(text))
         out = []
         if action:
-            out.append(self.prefrontal.imagine(action, drives, use_knowledge=False).narrative())
-        knowledge = self.memory.recall_consequences(text, limit=5)
+            out.append(self.prefrontal.imagine(action, drives, use_knowledge=True).narrative())
+        knowledge = (self.knowledge_about(action, limit=3) if action else []) + \
+            self.memory.recall_consequences(text, limit=3)
+        knowledge = list({k["sentence"]: k for k in knowledge}.values())[:5]
         if knowledge:
             out.append("📚 Öğrendiğim bilgilere göre olası sonuçlar:")
             for k in knowledge:
                 out.append(f"  • {k['sentence'][:220]}  ({k['source']})")
+        if self.language and self.language.available:
+            facts = [k["sentence"] for k in knowledge]
+            if action:
+                facts += [f"{c['start']} {c['rel']} {c['end']}" for c in self.prefrontal.commonsense(action)[0]]
+            deep = self.language.imagine(text, action.tr if action else text, "\n".join(out), facts,
+                                         self.conscience.name)
+            if deep:
+                out.append("🧠 Derin düşünme (dil korteksi):\n" + deep)
+            elif self.language.error:
+                out.append(f"(dil korteksi kullanılamadı: {self.language.error})")
         if not out:
             out.append("Bu konuda henüz yeterli bilgim yok. `learn` komutu ile öğrenmeme izin ver.")
         return "\n".join(out)

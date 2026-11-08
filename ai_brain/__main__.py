@@ -7,6 +7,8 @@
   python -m ai_brain learn --minutes 40            # internetten öğren (kaldığı yerden devam eder)
   python -m ai_brain ask "amigdala nedir"
   python -m ai_brain status
+  python -m ai_brain build                         # büyük veri kümelerini indir + işle (Vikipedi, ConceptNet, Kur'an...)
+  python -m ai_brain --llm whatif "..."            # dil korteksi (Claude) ile derin düşünme
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ from pathlib import Path
 from .brain import Brain
 from .conscience import list_profiles
 from .knowledge import learn
+from .knowledge.bulk import SOURCES, build
 
 DATA = Path("data")
 
@@ -37,7 +40,7 @@ LIFE_EVENTS = [
 
 def make_brain(args) -> Brain:
     return Brain(profile=args.profile, db_path=DATA / "memory.db", state_path=DATA / "state.json",
-                 faith_strength=args.faith, seed=args.seed)
+                 faith_strength=args.faith, seed=args.seed, use_llm=args.llm)
 
 
 def main(argv=None) -> int:
@@ -46,6 +49,7 @@ def main(argv=None) -> int:
     ap.add_argument("--faith", type=float, default=0.8, help="inanç gücü 0..1")
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("-q", "--quiet", action="store_true", help="ne olur simülasyonlarını gösterme")
+    ap.add_argument("--llm", action="store_true", help="dil korteksini (Anthropic Claude) kullan")
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("live"); p.add_argument("--steps", type=int, default=8)
     sub.add_parser("chat")
@@ -59,6 +63,10 @@ def main(argv=None) -> int:
     p.add_argument("--max-pages", type=int, default=None)
     p.add_argument("--depth", type=int, default=3)
     p.add_argument("--topic", nargs="*", default=[], help="ek başlangıç konuları")
+    p = sub.add_parser("build", help="büyük açık veri kümelerini indir ve işle")
+    p.add_argument("--sources", nargs="+", default=list(SOURCES), choices=list(SOURCES))
+    p.add_argument("--hours", type=float, default=None, help="süre sınırı (sonra kaldığı yerden devam)")
+    p.add_argument("--limit", type=int, default=None, help="kaynak başına en fazla kayıt (deneme için)")
     args = ap.parse_args(argv)
     brain = make_brain(args)
     verbose = not args.quiet
@@ -88,12 +96,20 @@ def main(argv=None) -> int:
         print(brain.whatif(args.text))
     elif args.cmd == "ask":
         res = brain.ask(args.question)
+        if brain.language and brain.language.available:
+            ans = brain.language.answer(args.question, res, brain.conscience.name)
+            print(ans or f"(dil korteksi kullanılamadı: {brain.language.error})")
+            print("\nKaynaklar:")
         if not res:
-            print("Bu konuda bilgim yok. Önce `learn` çalıştır.")
+            print("Bu konuda bilgim yok. Önce `learn` veya `build` çalıştır.")
         for r in res:
             print(f"• [{r['lang']}] {r['title']}: {r['snippet']}\n  {r['url']}")
     elif args.cmd == "status":
         print(brain.status())
+    elif args.cmd == "build":
+        print(f"Toplu öğrenme: {', '.join(args.sources)}")
+        print(f"Bitti: {build(brain.memory, DATA / 'raw', args.sources, limit=args.limit, hours=args.hours)}")
+        print(f"Toplam hafıza: {brain.memory.stats()}")
     elif args.cmd == "learn":
         print(f"Öğrenme başlıyor: {args.minutes} dakika, diller: {', '.join(args.lang)}")
         stats = learn(brain.memory, minutes=args.minutes, langs=args.lang, max_pages=args.max_pages,

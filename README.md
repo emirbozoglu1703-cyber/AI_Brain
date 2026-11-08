@@ -5,8 +5,28 @@ sevabı/günahı tartan**, her eylemden önce **"bunu yaparsam ne olur?"** diye 
 **vücut bölgelerini tek tek kontrol eden** bir bilişsel mimari. Saf Python, ek bağımlılık yok.
 
 > ⚠️ Gerçekçi not: Bu bir *bilişsel mimari prototipidir* — gerçek bir insan bilinci değildir.
-> Dünyadaki bütün veriyi toplamak da fiziksel olarak mümkün değil; bunun yerine beyin açık
-> kaynaklardan (şimdilik Vikipedi TR + EN) **sürekli ve kaldığı yerden devam ederek** öğrenir.
+> Dünyadaki bütün veriyi toplamak fiziksel olarak mümkün değil; bunun yerine beyin büyük açık
+> veri kümelerini (aşağıda) toplu olarak işler ve Vikipedi'den canlı öğrenmeye devam eder.
+
+## Bilgi tabanı (`python -m ai_brain build`)
+
+| Kaynak | Ne işe yarar | Boyut (yaklaşık) |
+|---|---|---|
+| Türkçe Vikipedi'nin **tamamı** | Genel dünya bilgisi, `ask` soruları, neden-sonuç cümleleri | ~535 bin makale |
+| Basit İngilizce Vikipedi'nin tamamı | İngilizce genel bilgi | ~242 bin makale |
+| ConceptNet 5.7 (EN+TR) | Sağduyu: "çalmak → neden olur → hapse girmek", "içki → neden olur → muhakeme bozukluğu" | ~473 bin ilişki |
+| Kur'an-ı Kerim (Diyanet meali + Sahih International) | Vicdanın dayanak gösterdiği ayetler | 6.236 ayet × 2 |
+| 31 klasik (Aristoteles, Platon, Kant, Spinoza, Mill, Konfüçyüs, Kitab-ı Mukaddes, Darwin, W. James...) | Ahlak felsefesi, din, psikoloji | ~19 bin parça |
+
+İndirme ≈1,2 GB, işlenmiş hafıza birkaç GB'dır; tam kurulum sıradan bir bilgisayarda yaklaşık
+15–30 dakika sürer ve kesilirse kaldığı yerden devam eder. Lisanslar: `NOTICE.md`.
+
+**Bu bilgiler kararlara nasıl yansır?**
+- *Sağduyu içgüdüsü:* ConceptNet'te bir eylem "kötü/yasa dışı/hapse götürür" diye geçiyorsa beyin ondan
+  kaçınır; "mutluluk/sağlık getirir" diye geçiyorsa yönelir. Bu, kurallara ek olarak **veriden öğrenilmiş** bir
+  iyi-kötü sezgisidir.
+- *Dayanak:* Vicdan, kararın ahlaki gerekçesini Kur'an'dan (veya Hristiyanlık profilinde KJV'den) ayetle gösterir.
+- *Ne olur?* `whatif` hem ConceptNet sonuçlarını hem de Vikipedi/kitaplardan çıkarılmış neden-sonuç cümlelerini listeler.
 
 ## Beyin bölgeleri
 
@@ -17,7 +37,8 @@ sevabı/günahı tartan**, her eylemden önce **"bunu yaparsam ne olur?"** diye 
 | Hipotalamus | `limbic.py` | İhtiyaçlar: açlık, susuzluk, yorgunluk, yalnızlık, manevi ihtiyaç, nefsani arzu… |
 | Hipokampus | `memory.py` | Uzun süreli hafıza (SQLite + tam metin arama): bilgiler, neden-sonuç cümleleri, anılar |
 | Prefrontal korteks | `cortex.py` | Her olası eylemi hayal eder: ihtiyaç, duygu, risk, başkalarına etki, ahlak |
-| Vicdan (vmPFC) | `conscience.py` + `beliefs/*.json` | İnanç profiline göre sevap/günah; **mutlak yasaklar** |
+| Vicdan (vmPFC) | `conscience.py` + `beliefs/*.json` | İnanç profiline göre sevap/günah, kutsal metinden dayanak; **mutlak yasaklar** |
+| Dil korteksi (Broca/Wernicke) | `language.py` | İsteğe bağlı: Claude ile doğal dil cevap, derin "ne olur?" düşünmesi |
 | Bazal ganglionlar | `cortex.py` | Karar + alışkanlık öğrenme (pekiştirmeli öğrenme) |
 | Motor korteks + beyincik + beyin sapı | `cortex.py` | Eylemi vücut komutlarına çevirir, uygulanabilirliği denetler, nabız/solunumu ayarlar |
 | Vücut | `body.py` | Göz, kulak, ağız, el, kol, bacak, kalp, akciğer, mide, deri — **entegrasyon noktası** |
@@ -50,6 +71,10 @@ python -m ai_brain whatif "cüzdanı saklarsam ne olur"
 python -m ai_brain learn --minutes 40                  # internetten öğren
 python -m ai_brain ask "amigdala nedir"
 python -m ai_brain status
+python -m ai_brain build                               # tüm büyük veri kümeleri (bkz. yukarı)
+python -m ai_brain build --sources quran conceptnet    # yalnızca bazıları
+python -m ai_brain --llm whatif "işimi bırakırsam ne olur"   # dil korteksi ile derin düşünme
+python -m ai_brain --llm ask "amigdala ne işe yarar"
 python -m ai_brain --profile secular --faith 0.3 live  # farklı inanç / kişilik
 ```
 Hafıza ve beyin durumu `data/` klasöründe saklanır (git'e eklenmez).
@@ -65,10 +90,21 @@ Hafıza ve beyin durumu `data/` klasöründe saklanır (git'e eklenmez).
 python -m unittest discover -s tests -v
 ```
 
+## Dil korteksi (isteğe bağlı)
+`pip install anthropic` ve `ANTHROPIC_API_KEY` (veya `ant auth login`) ile `--llm` bayrağı açılır.
+Varsayılan model `claude-opus-5-5` (`AI_BRAIN_MODEL` ortam değişkeniyle değiştirilebilir). Dil modeli
+yalnızca **düşünür ve konuşur**; karar ve mutlak yasaklar beyindedir. Kimlik bilgisi yoksa beyin
+sorunsuz biçimde kendi başına çalışmaya devam eder.
+
+## Eylemler ve durumlar
+49 eylem (yemek, uyku, namaz, oruç, sadaka, yardım, teselli, sözünü tutmak, ders çalışmak, kopya,
+içki, dedikodu, çocuğu korumak, kaçmak...) ve 25'ten fazla algılanan durum (cüzdan bulmak, tehlike,
+hakaret, sınav, ramazan, üzgün biri, ödünç eşya...). Yeni eylem: `actions.py`'ye bir `Action` ve
+`ACTION_CONCEPTS` girdisi; yeni durum: `perception.py`'ye bir kalıp.
+
 ## Yol haritası (entegrasyon)
 1. **Algı**: `perception.py` → kamera (nesne tanıma), mikrofon (konuşma tanıma) bayrakları üretsin.
 2. **Vücut**: `Body.apply` → robot/simülasyon (ör. ROS, MuJoCo, Unity) aktüatörlerine bağlansın.
-3. **Dil**: `answer_question` ve "ne olur?" muhakemesi bir büyük dil modeline bağlanarak serbest
-   konuşma ve çok daha zengin sonuç tahmini kazanabilir.
+3. **Dil**: ✅ `language.py` (Claude) hazır; API anahtarı ile etkinleşir.
 4. **Kaynaklar**: `knowledge.Source` sınıfından türeterek Vikikaynak, Project Gutenberg, açık
    makale arşivleri vb. eklenebilir.

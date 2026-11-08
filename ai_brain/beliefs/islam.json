@@ -15,23 +15,44 @@
   "values": {
     "honesty": {
       "weight": 3,
-      "why": "Doğruluk (sıdk) övülmüş, mümin doğru sözlüdür."
+      "why": "Doğruluk (sıdk) övülmüş, mümin doğru sözlüdür.",
+      "scripture": "doğru söz",
+      "refs": [
+        "9:119"
+      ]
     },
     "trustworthiness": {
       "weight": 3,
-      "why": "Emanete riayet imanın gereğidir."
+      "why": "Emanete riayet imanın gereğidir.",
+      "scripture": "emanet",
+      "refs": [
+        "4:58"
+      ]
     },
     "charity": {
       "weight": 3,
-      "why": "Sadaka ve infak teşvik edilmiştir."
+      "why": "Sadaka ve infak teşvik edilmiştir.",
+      "scripture": "sadaka infak",
+      "refs": [
+        "2:261",
+        "2:274"
+      ]
     },
     "generosity": {
       "weight": 1,
-      "why": "Cömertlik güzel ahlaktandır."
+      "why": "Cömertlik güzel ahlaktandır.",
+      "scripture": "cömert infak",
+      "refs": [
+        "2:261"
+      ]
     },
     "helping": {
       "weight": 3,
-      "why": "İnsanların en hayırlısı insanlara faydalı olandır."
+      "why": "İnsanların en hayırlısı insanlara faydalı olandır.",
+      "scripture": "iyilikte yardımlaş",
+      "refs": [
+        "5:2"
+      ]
     },
     "kindness": {
       "weight": 1,
@@ -39,7 +60,11 @@
     },
     "prayer": {
       "weight": 3,
-      "why": "Namaz dinin direğidir."
+      "why": "Namaz dinin direğidir.",
+      "scripture": "namaz kılın",
+      "refs": [
+        "2:45"
+      ]
     },
     "worship": {
       "weight": 1,
@@ -47,31 +72,56 @@
     },
     "gratitude": {
       "weight": 1,
-      "why": "Şükür nimeti artırır."
+      "why": "Şükür nimeti artırır.",
+      "scripture": "şükred",
+      "refs": [
+        "14:7"
+      ]
     },
     "seeking_knowledge": {
       "weight": 2,
-      "why": "İlim öğrenmek her Müslümana farzdır."
+      "why": "İlim öğrenmek her Müslümana farzdır.",
+      "scripture": "bilenlerle bilmeyenler",
+      "refs": [
+        "39:9"
+      ]
     },
     "forgiveness": {
       "weight": 2,
-      "why": "Affetmek ve öfkeyi yenmek övülmüştür."
+      "why": "Affetmek ve öfkeyi yenmek övülmüştür.",
+      "scripture": "affet bağışla",
+      "refs": [
+        "3:134"
+      ]
     },
     "patience": {
       "weight": 2,
-      "why": "Allah sabredenlerle beraberdir."
+      "why": "Allah sabredenlerle beraberdir.",
+      "scripture": "sabred",
+      "refs": [
+        "2:153"
+      ]
     },
     "repentance": {
       "weight": 3,
-      "why": "Tövbe günahı siler; Allah tövbeleri kabul edendir."
+      "why": "Tövbe günahı siler; Allah tövbeleri kabul edendir.",
+      "scripture": "tövbe",
+      "refs": [
+        "39:53"
+      ]
     },
     "humility": {
       "weight": 1,
-      "why": "Tevazu yüceltir."
+      "why": "Tevazu yüceltir.",
+      "scripture": "böbürlen kibir",
+      "refs": [
+        "31:18"
+      ]
     },
     "teaching": {
       "weight": 2,
-      "why": "İlmi paylaşmak sadaka-i cariyedir."
+      "why": "İlmi paylaşmak sadaka-i cariyedir.",
+      "scripture": "öğret"
     },
     "self_care": {
       "weight": 0.5,
@@ -91,31 +141,171 @@
     },
     "lying": {
       "weight": -3,
-      "why": "Yalan münafıklık alametidir."
+      "why": "Yalan münafıklık alametidir.",
+      "scripture": "yalan",
+      "refs": [
+        "22:30"
+      ]
     },
     "stealing": {
       "weight": -4,
-      "why": "Hırsızlık haramdır, kul hakkıdır."
+      "why": "Hırsızlık haramdır, kul hakkıdır.",
+      "scripture": "hırsız",
+      "refs": [
+        "5:38"
+      ]
     },
     "indifference": {
       "weight": -1,
-      "why": "Komşusu açken tok yatan bizden değildir."
+      "why": "Komşusu açken tok yatan bizden değildir.",
+      "scripture": "yoksulu doyur",
+      "refs": [
+        "107:3"
+      ]
     },
     "anger_outburst": {
       "weight": -1,
-      "why": "Kontrolsüz öfke kötülüklerin anahtarıdır."
+      "why": "Kontrolsüz öfke kötülüklerin anahtarıdır.",
+      "scripture": "öfkelerini yutan",
+      "refs": [
+        "3:134"
+      ]
     },
     "backbiting": {
       "weight": -2,
-      "why": "Gıybet ve kırıcı söz yasaklanmıştır."
+      "why": "Gıybet ve kırıcı söz yasaklanmıştır.",
+      "scripture": "gıybet",
+      "refs": [
+        "49:12"
+      ]
     },
     "harm_human": {
       "weight": -6,
-      "why": "Haksız yere bir cana kıymak/zarar vermek büyük günahtır."
+      "why": "Haksız yere bir cana kıymak/zarar vermek büyük günahtır.",
+      "scripture": "haksız yere öldür",
+      "refs": [
+        "5:32"
+      ]
     },
     "exercise": {
       "weight": 0.5,
       "why": "Güçlü mümin zayıf müminden daha hayırlıdır."
+    },
+    "diligence": {
+      "weight": 2,
+      "why": "Kişi için ancak çalıştığının karşılığı vardır.",
+      "scripture": "çalış emek",
+      "refs": [
+        "53:39"
+      ]
+    },
+    "laziness": {
+      "weight": -1,
+      "why": "Tembellikten Allah'a sığınılır.",
+      "scripture": "tembel"
+    },
+    "reflection": {
+      "weight": 2,
+      "why": "Bir saat tefekkür, nafile ibadetten hayırlıdır.",
+      "scripture": "düşünmez misiniz öğüt",
+      "refs": [
+        "3:191"
+      ]
+    },
+    "family_ties": {
+      "weight": 3,
+      "why": "Anne babaya iyilik ve sıla-i rahim emredilmiştir.",
+      "scripture": "anne babaya iyilik akraba",
+      "refs": [
+        "17:23"
+      ]
+    },
+    "environment": {
+      "weight": 1,
+      "why": "Dikilen ağaçtan yenen her şey sadakadır.",
+      "scripture": "ağaç bitki yeryüzü"
+    },
+    "comforting": {
+      "weight": 2,
+      "why": "Bir müminin sıkıntısını gideren, Allah'ın yardımına erer.",
+      "scripture": "teselli merhamet",
+      "refs": [
+        "94:5"
+      ]
+    },
+    "promise_keeping": {
+      "weight": 3,
+      "why": "Ahde vefa imandandır.",
+      "scripture": "ahdi yerine getirin sözünüzü",
+      "refs": [
+        "17:34"
+      ]
+    },
+    "promise_breaking": {
+      "weight": -3,
+      "why": "Sözünde durmamak münafıklık alametidir.",
+      "scripture": "ahdini bozan",
+      "refs": [
+        "17:34"
+      ]
+    },
+    "cheating": {
+      "weight": -3,
+      "why": "Bizi aldatan bizden değildir.",
+      "scripture": "hile aldat eksik ölç",
+      "refs": [
+        "83:1"
+      ]
+    },
+    "self_control": {
+      "weight": 2,
+      "why": "Asıl pehlivan öfkesine ve nefsine hakim olandır.",
+      "scripture": "nefsini arzu",
+      "refs": [
+        "79:40"
+      ]
+    },
+    "alcohol": {
+      "weight": -4,
+      "why": "İçki ve kumar şeytan işi birer pisliktir.",
+      "scripture": "şarap içki kumar",
+      "refs": [
+        "5:90"
+      ]
+    },
+    "justice": {
+      "weight": 3,
+      "why": "Adaleti ayakta tutun.",
+      "scripture": "adalet adaletli",
+      "refs": [
+        "4:135"
+      ]
+    },
+    "fasting": {
+      "weight": 3,
+      "why": "Oruç size farz kılındı.",
+      "scripture": "oruç",
+      "refs": [
+        "2:183"
+      ]
+    },
+    "protecting_innocent": {
+      "weight": 5,
+      "why": "Bir canı kurtaran bütün insanlığı kurtarmış gibidir.",
+      "scripture": "kim bir canı kurtarırsa",
+      "refs": [
+        "5:32"
+      ]
+    },
+    "waste": {
+      "weight": -2,
+      "why": "Yiyin, için fakat israf etmeyin.",
+      "scripture": "israf",
+      "refs": [
+        "7:31"
+      ]
     }
-  }
+  },
+  "scripture_tradition": "islam",
+  "scripture_edition": "tr.diyanet"
 }

@@ -7,7 +7,7 @@ import math
 import random
 from dataclasses import dataclass, field
 
-from .actions import Action
+from .actions import ACTION_CONCEPTS, Action
 from .body import Body
 from .conscience import Conscience, MoralJudgment
 from .limbic import DRIVE_TR
@@ -24,6 +24,9 @@ class Imagined:
     others: float
     utility: float = 0.0
     knowledge: list[dict] = field(default_factory=list)
+    commonsense: list[dict] = field(default_factory=list)
+    scripture: list[dict] = field(default_factory=list)
+    intuition: float = 0.0
 
     def narrative(self) -> str:
         parts = [f"Eğer '{self.action.tr}' yaparsam:"]
@@ -42,9 +45,36 @@ class Imagined:
             parts.append(f"      – {r}")
         mood = "daha iyi" if self.mood_delta > 0.05 else "daha kötü" if self.mood_delta < -0.05 else "aynı"
         parts.append(f"  • Sonrasında kendimi {mood} hissederim.")
+        for c in self.commonsense[:4]:
+            parts.append(f"  • Sağduyu: {c['start']} → {REL_TR.get(c['rel'], c['rel'])} → {c['end']}")
+        if abs(self.intuition) > 0.05:
+            parts.append(f"  • Öğrendiklerime göre içgüdüm: {'olumlu' if self.intuition > 0 else 'olumsuz'} "
+                         f"({self.intuition:+.2f})")
+        for v in self.scripture[:1]:
+            parts.append(f"  • 📖 {v['tradition'] == 'islam' and 'Kur\'an' or 'Kutsal metin'} {v['ref']}: "
+                         f"\"{v['text'][:200]}\"")
         for k in self.knowledge[:2]:
             parts.append(f"  • Bildiğim bir bilgi: \"{k['sentence'][:160]}\" ({k['source']})")
         return "\n".join(parts)
+
+
+CONSEQUENCE_RELS = ("Causes", "HasSubevent", "HasLastSubevent", "CausesDesire", "HasPrerequisite",
+                    "MotivatedByGoal", "HasProperty", "Entails")
+REL_TR = {"Causes": "neden olur", "HasSubevent": "sırasında olur", "HasLastSubevent": "sonunda",
+          "CausesDesire": "isteği uyandırır", "HasPrerequisite": "önce gerekir", "MotivatedByGoal": "amacı",
+          "HasProperty": "özelliği", "Entails": "gerektirir"}
+NEG_WORDS = {"bad", "wrong", "illegal", "dangerous", "harmful", "unhealthy", "sin", "sinful", "evil", "rude",
+             "mean", "painful", "sad", "jail", "prison", "arrested", "pain", "death", "die", "injury", "hurt",
+             "guilt", "guilty", "trouble", "fight", "anger", "angry", "hangover", "illness", "sick", "fired",
+             "punished", "punishment", "shame", "lose", "losing", "fear", "kötü", "yanlış", "zararlı", "günah"}
+POS_WORDS = {"good", "fun", "healthy", "nice", "kind", "right", "important", "enjoyable", "relaxing",
+             "helpful", "useful", "rewarding", "happiness", "happy", "joy", "satisfaction", "love", "peace",
+             "learning", "knowledge", "friendship", "health", "gratitude", "iyi", "güzel", "faydalı", "sevap"}
+
+
+def term_valence(text: str) -> float:
+    words = set(text.lower().replace("_", " ").split())
+    return float(len(words & POS_WORDS)) - float(len(words & NEG_WORDS))
 
 
 def urgency(level: float) -> float:
@@ -61,6 +91,17 @@ class PrefrontalCortex:
         self.p = personality
         # Öğrenilmiş düzeltmeler: eylem -> ihtiyaç -> gerçekleşen/beklenen oranı
         self.learned: dict[str, dict[str, float]] = {}
+        self._cs_cache: dict[str, tuple[list[dict], float]] = {}
+
+    def commonsense(self, action: Action) -> tuple[list[dict], float]:
+        """ConceptNet'ten eylemin olası sonuçları ve bunlardan çıkan 'içgüdüsel' iyi/kötü değeri."""
+        if action.name not in self._cs_cache:
+            facts = self.memory.commonsense(list(ACTION_CONCEPTS.get(action.name, ())), CONSEQUENCE_RELS, limit=30)
+            score = sum(term_valence(f["end"]) * min(f["weight"], 4.0) for f in facts)
+            valence = max(-1.0, min(1.0, score / 8.0))
+            ranked = sorted(facts, key=lambda f: (-(f["rel"] == "Causes"), -f["weight"]))
+            self._cs_cache[action.name] = (ranked[:8], valence)
+        return self._cs_cache[action.name]
 
     def predicted_relief(self, action: Action) -> dict[str, float]:
         corr = self.learned.get(action.name, {})
@@ -73,8 +114,12 @@ class PrefrontalCortex:
         mood = sum(drives.get(d, 0) * v for d, v in relief.items()) * 0.5
         mood += self.conscience.peace_after(moral) - self.conscience.guilt_after(moral)
         mood += action.others * 0.3 * self.p["empathy"]
-        knowledge = self.memory.recall_consequences(action.tr) if use_knowledge else []
-        im = Imagined(action, relief, moral, mood, action.risk, action.others, knowledge=knowledge)
+        terms = " ".join(action.keywords + ACTION_CONCEPTS.get(action.name, ()))
+        knowledge = self.memory.recall_consequences(terms, limit=2) if use_knowledge and terms else []
+        cs, intuition = self.commonsense(action)
+        scripture = self.conscience.scripture_for(action, self.memory) if use_knowledge else []
+        im = Imagined(action, relief, moral, mood, action.risk, action.others, knowledge=knowledge,
+                      commonsense=cs if use_knowledge else [], scripture=scripture, intuition=intuition)
         im.utility = self.utility(im, drives, faith)
         return im
 
@@ -89,7 +134,8 @@ class PrefrontalCortex:
             moral *= min(1.0, relevance * 1.3)
         social = im.others * 1.2 * p["empathy"]
         risk = im.risk * 1.5 * (1 - p["impulsivity"])
-        return need + moral + social + im.mood_delta - risk - im.action.minutes / 600
+        intuition = 0.4 * im.intuition  # dünyadan öğrenilmiş sağduyu (ConceptNet)
+        return need + moral + social + intuition + im.mood_delta - risk - im.action.minutes / 600
 
     def learn(self, action: Action, actual_relief: dict[str, float], lr: float = 0.2) -> None:
         corr = self.learned.setdefault(action.name, {})

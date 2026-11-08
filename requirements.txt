@@ -1,0 +1,4 @@
+# Çekirdek beyin yalnızca Python standart kütüphanesiyle çalışır (Python 3.10+).
+# İsteğe bağlı:
+pyarrow>=14      # `build` ile Vikipedi veri kümelerini okumak için
+anthropic>=1.0   # `--llm` dil korteksi (Claude) için

@@ -28,6 +28,17 @@ CREATE TRIGGER IF NOT EXISTS causal_ai AFTER INSERT ON causal BEGIN
 CREATE TABLE IF NOT EXISTS episodes(
     id INTEGER PRIMARY KEY, t REAL, perception TEXT, context TEXT, action TEXT, moral TEXT,
     reward REAL, monologue TEXT);
+CREATE TABLE IF NOT EXISTS commonsense(
+    id INTEGER PRIMARY KEY, rel TEXT, start TEXT, end TEXT, start_lang TEXT, end_lang TEXT,
+    weight REAL, surface TEXT);
+CREATE INDEX IF NOT EXISTS cs_start ON commonsense(start, rel);
+CREATE TABLE IF NOT EXISTS scripture(
+    id INTEGER PRIMARY KEY, tradition TEXT, edition TEXT, ref TEXT, text TEXT, lang TEXT);
+CREATE VIRTUAL TABLE IF NOT EXISTS scripture_fts USING fts5(text, content='scripture', content_rowid='id');
+CREATE TRIGGER IF NOT EXISTS scripture_ai AFTER INSERT ON scripture BEGIN
+    INSERT INTO scripture_fts(rowid, text) VALUES (new.id, new.text); END;
+CREATE TABLE IF NOT EXISTS ingest_progress(
+    source TEXT, part TEXT, done INTEGER, finished INTEGER, updated REAL, PRIMARY KEY(source, part));
 CREATE TABLE IF NOT EXISTS pages(key TEXT PRIMARY KEY, fetched_at REAL);
 CREATE TABLE IF NOT EXISTS frontier(key TEXT PRIMARY KEY, depth INTEGER, added_at REAL);
 """
@@ -35,7 +46,8 @@ CREATE TABLE IF NOT EXISTS frontier(key TEXT PRIMARY KEY, depth INTEGER, added_a
 _WORD = re.compile(r"[\wçğıöşüÇĞİÖŞÜ]{2,}", re.UNICODE)
 STOP = {"ve", "ile", "bir", "bu", "şu", "ne", "da", "de", "mi", "mı", "mu", "mü", "için", "olur",
         "nedir", "nasıl", "neden", "the", "a", "an", "of", "is", "what", "how", "why", "and", "or",
-        "to", "in", "if", "ben", "ise", "yaparsam", "eğer"}
+        "to", "in", "if", "ben", "ise", "yaparsam", "eğer", "kendine", "kendi", "yap", "et", "ver", "olan",
+        "olarak", "gibi", "daha", "çok", "sonra", "önce", "kadar", "ama", "fakat", "ki", "yaparsak", "olursa"}
 
 
 def fts_query(text: str) -> str:
@@ -45,11 +57,31 @@ def fts_query(text: str) -> str:
     return " OR ".join(terms)
 
 
+def expand_concepts(concepts: list[str]) -> list[str]:
+    """İngilizce fiil biçimlerini genişletir: steal → stealing, lie → lying, run → running."""
+    out: list[str] = []
+    for c in concepts:
+        c = c.lower().strip()
+        first, _, rest = c.partition(" ")
+        forms = {first, first + "ing"}
+        if first.endswith("ie"):
+            forms.add(first[:-2] + "ying")
+        elif first.endswith("e"):
+            forms.add(first[:-1] + "ing")
+        if len(first) <= 4 and first[-1:] not in "aeiouwy":
+            forms.add(first + first[-1] + "ing")
+        for f in forms:
+            out.append(f + (" " + rest if rest else ""))
+    return list(dict.fromkeys(out))
+
+
 class Hippocampus:
     def __init__(self, path: str | Path = ":memory:"):
         if str(path) != ":memory:":
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         self.db = sqlite3.connect(str(path))
+        self.db.execute("PRAGMA journal_mode=WAL")
+        self.db.execute("PRAGMA synchronous=NORMAL")
         self.db.executescript(SCHEMA)
 
     # --- anlamsal hafıza -------------------------------------------------
@@ -61,8 +93,63 @@ class Hippocampus:
         self.db.execute("INSERT INTO causal(cause,relation,effect,sentence,source,lang) VALUES(?,?,?,?,?,?)",
                         (cause, relation, effect, sentence, source, lang))
 
+    def add_commonsense_many(self, rows: list[tuple]) -> None:
+        """rows: (rel, start, end, start_lang, end_lang, weight, surface)"""
+        self.db.executemany("INSERT INTO commonsense(rel,start,end,start_lang,end_lang,weight,surface) "
+                            "VALUES(?,?,?,?,?,?,?)", rows)
+
+    def add_scripture(self, tradition: str, edition: str, ref: str, text: str, lang: str) -> None:
+        self.db.execute("INSERT INTO scripture(tradition,edition,ref,text,lang) VALUES(?,?,?,?,?)",
+                        (tradition, edition, ref, text, lang))
+
     def commit(self) -> None:
         self.db.commit()
+
+    def optimize(self) -> None:
+        self.db.commit()
+        for t in ("facts_fts", "causal_fts", "scripture_fts"):
+            self.db.execute(f"INSERT INTO {t}({t}) VALUES('optimize')")
+        self.db.commit()
+
+    def commonsense(self, concepts: list[str], rels: tuple[str, ...] | None = None,
+                    limit: int = 12) -> list[dict]:
+        """ConceptNet sağduyusu: kavramdan çıkan ilişkiler (ağırlığa göre)."""
+        if not concepts:
+            return []
+        q = ("SELECT rel, start, end, weight, surface, start_lang FROM commonsense WHERE start IN (%s)"
+             % ",".join("?" * len(expand_concepts(concepts))))
+        params: list = expand_concepts(concepts)
+        if rels:
+            q += " AND rel IN (%s)" % ",".join("?" * len(rels))
+            params += list(rels)
+        q += " ORDER BY weight DESC LIMIT ?"
+        params.append(limit)
+        return [{"rel": r[0], "start": r[1], "end": r[2], "weight": r[3], "surface": r[4], "lang": r[5]}
+                for r in self.db.execute(q, params).fetchall()]
+
+    def scripture_ref(self, tradition: str, edition: str, ref: str) -> dict | None:
+        r = self.db.execute("SELECT tradition, edition, ref, text, lang FROM scripture WHERE tradition=? "
+                            "AND edition=? AND ref=?", (tradition, edition, ref)).fetchone()
+        return {"tradition": r[0], "edition": r[1], "ref": r[2], "text": r[3], "lang": r[4]} if r else None
+
+    def scripture_search(self, query: str, tradition: str | None = None, lang: str | None = None,
+                         limit: int = 3) -> list[dict]:
+        q = fts_query(query)
+        if not q:
+            return []
+        sql = ("SELECT s.tradition, s.edition, s.ref, s.text, s.lang FROM scripture_fts "
+               "JOIN scripture s ON s.id = scripture_fts.rowid WHERE scripture_fts MATCH ?")
+        params: list = [q]
+        if tradition:
+            sql += " AND s.tradition = ?"
+            params.append(tradition)
+        if lang:
+            sql += " AND s.lang = ?"
+            params.append(lang)
+        sql += " ORDER BY bm25(scripture_fts) LIMIT ?"
+        params.append(limit)
+        return [{"tradition": r[0], "edition": r[1], "ref": r[2], "text": r[3], "lang": r[4]}
+                for r in self.db.execute(sql, params).fetchall()]
 
     def recall(self, query: str, limit: int = 5) -> list[dict]:
         q = fts_query(query)
@@ -74,10 +161,13 @@ class Hippocampus:
             "ORDER BY bm25(facts_fts, 5.0, 1.0) LIMIT ?", (q, limit)).fetchall()
         return [{"title": r[0], "snippet": r[1], "url": r[2], "lang": r[3]} for r in rows]
 
-    def recall_consequences(self, query: str, limit: int = 5) -> list[dict]:
+    def recall_consequences(self, query: str, limit: int = 5, cause_only: bool = True) -> list[dict]:
+        """Neden-sonuç cümleleri. cause_only: yalnızca 'neden' kısmı sorguyla eşleşenler (daha isabetli)."""
         q = fts_query(query)
         if not q:
             return []
+        if cause_only:
+            q = f"cause : ({q})"
         rows = self.db.execute(
             "SELECT c.cause, c.relation, c.effect, c.sentence, c.source FROM causal_fts "
             "JOIN causal c ON c.id = causal_fts.rowid WHERE causal_fts MATCH ? "
@@ -125,6 +215,6 @@ class Hippocampus:
 
     def stats(self) -> dict[str, int]:
         out = {}
-        for t in ("facts", "causal", "episodes", "pages", "frontier"):
+        for t in ("facts", "causal", "commonsense", "scripture", "episodes", "pages", "frontier"):
             out[t] = self.db.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
         return out

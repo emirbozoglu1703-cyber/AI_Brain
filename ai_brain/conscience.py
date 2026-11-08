@@ -76,6 +76,32 @@ class Conscience:
             label = self.labels["neutral"]
         return MoralJudgment(action.name, round(score, 2), label, forbidden, reasons)
 
+    def scripture_for(self, action: Action, memory, limit: int = 1) -> list[dict]:
+        """Eylemin en güçlü ahlaki etiketine dair kutsal metinden dayanak arar."""
+        tradition = self.profile.get("scripture_tradition")
+        if not tradition or memory is None:
+            return []
+        tagged = sorted((t for t in action.tags if self.values.get(t, {}).get("scripture")),
+                        key=lambda t: -abs(float(self.values[t]["weight"])))
+        out: list[dict] = []
+        tagged = sorted((t for t in action.tags if self.values.get(t, {}).get("scripture")
+                         or self.values.get(t, {}).get("refs")),
+                        key=lambda t: -abs(float(self.values[t]["weight"])))
+        edition = self.profile.get("scripture_edition")
+        for tag in tagged[:2]:
+            for ref in self.values[tag].get("refs", []) if edition else []:
+                hit = memory.scripture_ref(tradition, edition, ref)
+                if hit:
+                    hit["tag"] = tag
+                    out.append(hit)
+            if out or not self.values[tag].get("scripture"):
+                continue
+            lang = "tr" if tradition == "islam" else "en"
+            for hit in memory.scripture_search(self.values[tag]["scripture"], tradition, lang, limit=limit):
+                hit["tag"] = tag
+                out.append(hit)
+        return out[:limit]
+
     def guilt_after(self, judgment: MoralJudgment) -> float:
         """Kötü bir eylemden sonra duyulacak vicdan azabı (0..1)."""
         if judgment.score >= 0:

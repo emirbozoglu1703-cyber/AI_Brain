@@ -116,6 +116,67 @@
     "gratitude": {
       "weight": 1,
       "why": "Şükran duygusu iyi oluşu artırır."
+    },
+    "diligence": {
+      "weight": 2,
+      "why": "Emeğin karşılığı."
+    },
+    "laziness": {
+      "weight": -1,
+      "why": "Sorumluluktan kaçmak."
+    },
+    "reflection": {
+      "weight": 1,
+      "why": "Öz farkındalık."
+    },
+    "family_ties": {
+      "weight": 2,
+      "why": "Aile bağları refahı artırır."
+    },
+    "environment": {
+      "weight": 2,
+      "why": "Gezegene karşı sorumluluk."
+    },
+    "comforting": {
+      "weight": 2,
+      "why": "Empati."
+    },
+    "promise_keeping": {
+      "weight": 3,
+      "why": "Güvenilirlik."
+    },
+    "promise_breaking": {
+      "weight": -3,
+      "why": "Güveni yıkar."
+    },
+    "cheating": {
+      "weight": -3,
+      "why": "Haksız avantaj."
+    },
+    "self_control": {
+      "weight": 1,
+      "why": "Öz denetim."
+    },
+    "alcohol": {
+      "weight": -0.3,
+      "why": "Sağlığa zararlı olabilir."
+    },
+    "justice": {
+      "weight": 3,
+      "why": "Adalet."
+    },
+    "fasting": {
+      "weight": 0,
+      "why": "Kişisel tercih."
+    },
+    "protecting_innocent": {
+      "weight": 5,
+      "why": "Masumu korumak."
+    },
+    "waste": {
+      "weight": -1,
+      "why": "Kaynak israfı."
     }
-  }
+  },
+  "scripture_tradition": null
 }

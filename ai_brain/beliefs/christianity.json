@@ -15,7 +15,8 @@
   "values": {
     "honesty": {
       "weight": 3,
-      "why": "Yalancı tanıklık etmeyeceksin."
+      "why": "Yalancı tanıklık etmeyeceksin.",
+      "scripture": "truth"
     },
     "trustworthiness": {
       "weight": 2,
@@ -23,7 +24,8 @@
     },
     "charity": {
       "weight": 3,
-      "why": "Komşunu kendin gibi sev."
+      "why": "Komşunu kendin gibi sev.",
+      "scripture": "charity"
     },
     "generosity": {
       "weight": 1,
@@ -31,7 +33,8 @@
     },
     "helping": {
       "weight": 3,
-      "why": "İyi Samiriyeli örneği."
+      "why": "İyi Samiriyeli örneği.",
+      "scripture": "neighbour"
     },
     "kindness": {
       "weight": 1,
@@ -39,7 +42,8 @@
     },
     "prayer": {
       "weight": 2,
-      "why": "Durmadan dua edin."
+      "why": "Durmadan dua edin.",
+      "scripture": "pray"
     },
     "worship": {
       "weight": 1,
@@ -55,19 +59,23 @@
     },
     "forgiveness": {
       "weight": 3,
-      "why": "Bize suç işleyenleri bağışladığımız gibi."
+      "why": "Bize suç işleyenleri bağışladığımız gibi.",
+      "scripture": "forgive"
     },
     "patience": {
       "weight": 2,
-      "why": "Sabır Ruh'un meyvesidir."
+      "why": "Sabır Ruh'un meyvesidir.",
+      "scripture": "patience"
     },
     "repentance": {
       "weight": 3,
-      "why": "Tövbe edin ve bağışlanın."
+      "why": "Tövbe edin ve bağışlanın.",
+      "scripture": "repent"
     },
     "humility": {
       "weight": 2,
-      "why": "Alçakgönüllüler yüceltilecek."
+      "why": "Alçakgönüllüler yüceltilecek.",
+      "scripture": "humble"
     },
     "teaching": {
       "weight": 1,
@@ -91,11 +99,13 @@
     },
     "lying": {
       "weight": -3,
-      "why": "Yalan söylemeyeceksin."
+      "why": "Yalan söylemeyeceksin.",
+      "scripture": "lying lips"
     },
     "stealing": {
       "weight": -4,
-      "why": "Çalmayacaksın."
+      "why": "Çalmayacaksın.",
+      "scripture": "thou shalt not steal"
     },
     "indifference": {
       "weight": -1,
@@ -111,11 +121,88 @@
     },
     "harm_human": {
       "weight": -6,
-      "why": "Öldürmeyeceksin."
+      "why": "Öldürmeyeceksin.",
+      "scripture": "thou shalt not kill"
     },
     "exercise": {
       "weight": 0.5,
       "why": "Beden Ruh'un tapınağıdır."
+    },
+    "diligence": {
+      "weight": 2,
+      "why": "Ne iş yaparsanız gönülden yapın.",
+      "scripture": "labour diligent"
+    },
+    "laziness": {
+      "weight": -1,
+      "why": "Tembellik yedi ölümcül günahtan biridir.",
+      "scripture": "sluggard slothful"
+    },
+    "reflection": {
+      "weight": 1,
+      "why": "Sessiz olun ve bilin.",
+      "scripture": "meditate"
+    },
+    "family_ties": {
+      "weight": 3,
+      "why": "Annene ve babana saygı göster.",
+      "scripture": "honour thy father and thy mother"
+    },
+    "environment": {
+      "weight": 1,
+      "why": "Yaratılışa özen.",
+      "scripture": "tree garden"
+    },
+    "comforting": {
+      "weight": 2,
+      "why": "Ağlayanlarla ağlayın.",
+      "scripture": "comfort"
+    },
+    "promise_keeping": {
+      "weight": 2,
+      "why": "Evetiniz evet olsun.",
+      "scripture": "vow"
+    },
+    "promise_breaking": {
+      "weight": -2,
+      "why": "Adağını bozma.",
+      "scripture": "vow"
+    },
+    "cheating": {
+      "weight": -3,
+      "why": "Hileli terazi Rab'be iğrençtir.",
+      "scripture": "false balance deceit"
+    },
+    "self_control": {
+      "weight": 2,
+      "why": "Ruh'un meyvesi özdenetimdir.",
+      "scripture": "temperance"
+    },
+    "alcohol": {
+      "weight": -0.5,
+      "why": "Şarapla sarhoş olmayın.",
+      "scripture": "drunk wine"
+    },
+    "justice": {
+      "weight": 3,
+      "why": "Adalet bir ırmak gibi aksın.",
+      "scripture": "justice"
+    },
+    "fasting": {
+      "weight": 1,
+      "why": "Oruç tuttuğunuzda...",
+      "scripture": "fast"
+    },
+    "protecting_innocent": {
+      "weight": 5,
+      "why": "Masumu korumak.",
+      "scripture": "innocent deliver"
+    },
+    "waste": {
+      "weight": -1,
+      "why": "Hiçbir şey ziyan olmasın.",
+      "scripture": "nothing be lost"
     }
-  }
+  },
+  "scripture_tradition": "christianity"
 }
